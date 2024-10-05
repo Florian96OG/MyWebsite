@@ -21,7 +21,7 @@ async function init() {
     await provider.send("eth_requestAccounts", []); // Request wallet connection
     signer = provider.getSigner();
     contract = new ethers.Contract(contractAddress, contractABI, signer);
-    await loadGameState();
+    createBoard(); // Create board on initialization
 }
 
 async function loadGameState() {
@@ -48,15 +48,18 @@ async function loadGameState() {
     }
 }
 
-async function createGame(playerO) {
+document.getElementById('startGame').addEventListener('click', async () => {
+    const playerO = await signer.getAddress(); // Get address of playerO
     await contract.startGame(playerO); // Start the game
-}
+    await loadGameState(); // Load game state
+});
 
 async function makeMove(x, y) {
     await contract.makeMove(x, y); // Call the smart contract to make a move
 }
 
 function createBoard() {
+    board.innerHTML = ''; // Clear previous board
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cell');
@@ -140,6 +143,6 @@ function resetGame() {
 
 // Call this function when your page loads
 window.addEventListener('load', init);
-createBoard();
+
 
 
