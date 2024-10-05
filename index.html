@@ -3,59 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Web3 Tic-Tac-Toe</title>
+    <title>Tic-Tac-Toe</title>
+    <style>
+        /* Simple CSS styles */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Web3 Tic-Tac-Toe!</h1>
-        <p>Play Tic-Tac-Toe on the blockchain. Challenge your friends and earn rewards!</p>
-        <a href="#game" class="cta-button">Play Now</a>
-    </header>
+    <h1>Tic-Tac-Toe</h1>
+    <div id="board"></div>
+    <script>
+        const board = document.getElementById('board');
+        let currentPlayer = 'X';
+        const cells = Array(9).fill(null);
 
-    <main>
-        <section id="features">
-            <h2>Features</h2>
-            <div class="feature">
-                <img src="https://example.com/path/to/decentralized.png" alt="Decentralized" class="feature-image">
-                <h3>Decentralized</h3>
-                <p>Enjoy a fully decentralized gaming experience on the blockchain.</p>
-            </div>
-            <div class="feature">
-                <img src="https://example.com/path/to/smart-contracts.png" alt="Smart Contracts" class="feature-image">
-                <h3>Smart Contracts</h3>
-                <p>All games are governed by smart contracts, ensuring fairness.</p>
-            </div>
-            <div class="feature">
-                <img src="https://example.com/path/to/rewards.png" alt="Rewards" class="feature-image">
-                <h3>Rewards</h3>
-                <p>Earn tokens and rewards as you play and win!</p>
-            </div>
-        </section>
+        function createBoard() {
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', () => handleClick(i));
+                board.appendChild(cell);
+            }
+        }
 
-        <section id="game">
-            <h2>About the Game</h2>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Tic_tac_toe.svg/1200px-Tic_tac_toe.svg.png" alt="Tic Tac Toe Game" class="game-image">
-            <p>Web3 Tic-Tac-Toe combines the classic game with blockchain technology, allowing players to own their games and assets. Join a community of gamers and enjoy a new way to play!</p>
-            <a href="#" class="cta-button">Get Started</a>
-        </section>
+        function handleClick(index) {
+            if (!cells[index]) {
+                cells[index] = currentPlayer;
+                board.children[index].innerText = currentPlayer;
+                if (checkWinner()) {
+                    setTimeout(() => alert(currentPlayer + ' wins!'), 10);
+                }
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            }
+        }
 
-        <section id="contact">
-            <h2>Stay Updated</h2>
-            <p>Join our newsletter to get the latest news and updates!</p>
-            <form>
-                <input type="email" placeholder="Your email address" required>
-                <button type="submit">Subscribe</button>
-            </form>
-        </section>
-    </main>
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
+            return winningCombinations.some(combination => {
+                const [a, b, c] = combination;
+                return cells[a] && cells[a] === cells[b] && cells[a] === cells[c];
+            });
+        }
 
-    <footer>
-        <p>&copy; 2024 Web3 Tic-Tac-Toe. All rights reserved.</p>
-    </footer>
-
-    <script src="script.js"></script>
+        createBoard();
+    </script>
 </body>
 </html>
-
-
