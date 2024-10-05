@@ -2,16 +2,20 @@ const board = document.getElementById('board');
 let currentPlayer = 'X';
 const cells = Array(9).fill(null);
 let gameOver = false; // Flag to indicate if the game has ended
+let gameStarted = false; // Flag to check if the game has started
 
 // Ethers.js initialization
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 let signer;
 let contract;
 
-// Your contract address and ABI
-const contractAddress = "0xE286c9A2A5bd6B64d2417D873Ab3D677C5A3bcb2";
+// Your new contract address and ABI
+const contractAddress = "0x33d9dEA2Fe94be83cAbb053fDC847A4fA22b3b12";
 const contractABI = [
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"}],"stateMutability":"view","type":"function"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"}],"name":"GameEnded","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"playerX","type":"address"},{"indexed":true,"internalType":"address","name":"playerO","type":"address"}],"name":"GameStarted","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":false,"internalType":"uint8","name":"x","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"y","type":"uint8"}],"name":"MoveMade","type":"event"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"},{"internalType":"uint8","name":"movesMade","type":"uint8"}],"stateMutability":"view","type":"function"},
     {"inputs":[],"name":"getGame","outputs":[{"internalType":"enum TicTacToe.Player[3][3]","name":"","type":"uint8[3][3]"},{"internalType":"enum TicTacToe.GameState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
     {"inputs":[{"internalType":"uint8","name":"x","type":"uint8"},{"internalType":"uint8","name":"y","type":"uint8"}],"name":"makeMove","outputs":[],"stateMutability":"nonpayable","type":"function"},
     {"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}
@@ -26,6 +30,7 @@ async function init() {
     console.log("Signer Address:", await signer.getAddress()); // Log the user's address
 
     contract = new ethers.Contract(contractAddress, contractABI, signer);
+    gameStarted = false; // Initialize game state
     createBoard(); // Create board on initialization
 }
 
@@ -50,9 +55,15 @@ async function loadGameState() {
         }
 
         // Check if the game is over
-        if (state !== 0) { // If state is not in progress
+        if (state === 3) { // If state is Player X Win
             gameOver = true;
-            alert('Game Over');
+            alert('Player X wins!');
+        } else if (state === 4) { // If state is Player O Win
+            gameOver = true;
+            alert('Player O wins!');
+        } else if (state === 2) { // If state is Tie
+            gameOver = true;
+            alert('It\'s a tie!');
         }
     } catch (error) {
         console.error("Error loading game state:", error); // Log any errors
@@ -69,6 +80,7 @@ document.getElementById('startGame').addEventListener('click', async () => {
         await tx.wait(); // Wait for transaction to be confirmed
         console.log('Transaction confirmed:', tx); // Log the transaction
 
+        gameStarted = true; // Set gameStarted to true
         await loadGameState(); // Load game state
         console.log('Game started'); // Debugging log
     } catch (error) {
@@ -76,6 +88,7 @@ document.getElementById('startGame').addEventListener('click', async () => {
     }
 });
 
+// Function to make a move
 async function makeMove(x, y) {
     try {
         const tx = await contract.makeMove(x, y); // Call the smart contract to make a move
@@ -93,15 +106,17 @@ function createBoard() {
         const cell = document.createElement('div');
         cell.classList.add('cell');
         cell.addEventListener('click', () => handleClick(i));
+        cell.style.pointerEvents = gameStarted ? 'auto' : 'none'; // Disable pointer events before game starts
         board.appendChild(cell);
     }
 }
 
 function handleClick(index) {
+    if (!gameStarted || gameOver) return; // Prevent clicks if game hasn't started or is over
     const x = Math.floor(index / 3);
     const y = index % 3;
 
-    if (!cells[index] && !gameOver) {
+    if (!cells[index]) {
         cells[index] = currentPlayer;
         board.children[index].innerText = currentPlayer;
 
@@ -159,6 +174,7 @@ function resetGame() {
         cells.fill(null);
         currentPlayer = 'X';
         gameOver = false;
+        gameStarted = false; // Reset gameStarted to false
         createBoard(); // Recreate the board
     }, 2000); // Reset the game after 2 seconds
 }
