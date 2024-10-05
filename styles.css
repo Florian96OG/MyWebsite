@@ -1,48 +1,56 @@
+/* General styles for the body */
 body {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     height: 100vh;
-    background-color: #f0f0f0;
-    font-family: Arial, sans-serif;
     margin: 0;
+    background-color: #f0f0f0; /* Light background color */
+    font-family: Arial, sans-serif; /* Font style */
 }
 
-.container {
-    text-align: center;
-}
-
-h1 {
-    color: blue;
-}
-
-.board {
+/* Styles for the game board */
+#board {
     display: grid;
     grid-template-columns: repeat(3, 100px);
     grid-template-rows: repeat(3, 100px);
     gap: 5px;
-    margin: 20px auto;
+    margin-bottom: 20px; /* Space below the board */
 }
 
+/* Styles for each cell */
 .cell {
-    width: 100px;
-    height: 100px;
+    border: 2px solid #333; /* Darker border */
+    background-color: #fff; /* White background for cells */
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 24px;
-    background-color: white;
-    border: 2px solid #ccc;
+    justify-content: center;
+    font-size: 48px; /* Larger font size for X and O */
     cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }
 
-.cell.winner {
-    background-color: yellow; /* Highlight winning cells */
+/* Hover effect for cells */
+.cell:hover {
+    background-color: #e0e0e0; /* Light grey background on hover */
 }
 
+/* Button styles for Start Game */
 button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
+    padding: 10px 20px; /* Padding for button */
+    font-size: 18px; /* Font size for button */
+    cursor: pointer; /* Pointer cursor for button */
+    background-color: #007BFF; /* Blue background */
+    color: white; /* White text */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
 }
+
+/* Hover effect for button */
+button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
 
