@@ -3,6 +3,59 @@ let currentPlayer = 'X';
 const cells = Array(9).fill(null);
 let gameOver = false; // Flag to indicate if the game has ended
 
+// Ethers.js initialization
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+let signer;
+let contract;
+
+// Your contract address and ABI
+const contractAddress = "0xE286c9A2A5bd6B64d2417D873Ab3D677C5A3bcb2";
+const contractABI = [
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"getGame","outputs":[{"internalType":"enum TicTacToe.Player[3][3]","name":"","type":"uint8[3][3]"},{"internalType":"enum TicTacToe.GameState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"uint8","name":"x","type":"uint8"},{"internalType":"uint8","name":"y","type":"uint8"}],"name":"makeMove","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}
+];
+
+async function init() {
+    await provider.send("eth_requestAccounts", []); // Request wallet connection
+    signer = provider.getSigner();
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+    await loadGameState();
+}
+
+async function loadGameState() {
+    // Load the game state from the smart contract
+    const gameState = await contract.getGame();
+    const boardState = gameState[0]; // The board state
+    const state = gameState[1]; // The game state
+
+    // Update the cells based on the game state
+    for (let i = 0; i < 9; i++) {
+        if (boardState[Math.floor(i / 3)][i % 3] === 1) { // Assuming 1 is for Player X
+            cells[i] = 'X';
+            board.children[i].innerText = 'X';
+        } else if (boardState[Math.floor(i / 3)][i % 3] === 2) { // Assuming 2 is for Player O
+            cells[i] = 'O';
+            board.children[i].innerText = 'O';
+        }
+    }
+
+    // Update current player and game status
+    if (state !== 0) { // If state is not in progress
+        gameOver = true;
+        alert('Game Over');
+    }
+}
+
+async function createGame(playerO) {
+    await contract.startGame(playerO); // Start the game
+}
+
+async function makeMove(x, y) {
+    await contract.makeMove(x, y); // Call the smart contract to make a move
+}
+
 function createBoard() {
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
@@ -13,9 +66,16 @@ function createBoard() {
 }
 
 function handleClick(index) {
-    if (!cells[index] && !gameOver) { // Check if the cell is empty and game is not over
+    const x = Math.floor(index / 3);
+    const y = index % 3;
+
+    if (!cells[index] && !gameOver) {
         cells[index] = currentPlayer;
         board.children[index].innerText = currentPlayer;
+
+        // Call the smart contract to make a move
+        makeMove(x, y).catch(console.error); // Handle any errors
+
         if (checkWinner()) {
             return; // Stop the game if there's a winner
         }
@@ -78,5 +138,8 @@ function resetGame() {
     }, 2000); // Wait 2 seconds before resetting
 }
 
+// Call this function when your page loads
+window.addEventListener('load', init);
 createBoard();
+
 
