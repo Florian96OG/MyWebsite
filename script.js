@@ -1,4 +1,3 @@
-// Select the game board element
 const board = document.getElementById('board');
 let currentPlayer = 'X';
 const cells = Array(9).fill(null);
@@ -13,13 +12,69 @@ let contract;
 // Your new contract address and ABI
 const contractAddress = "0xc09c6Bf98C8A6F90B2a8303A59198Cd737ADE098"; // Updated contract address
 const contractABI = [
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"}],"name":"GameEnded","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"playerX","type":"address"},{"indexed":true,"internalType":"address","name":"playerO","type":"address"}],"name":"GameStarted","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":false,"internalType":"uint8","name":"x","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"y","type":"uint8"}],"name":"MoveMade","type":"event"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"},{"internalType":"uint8","name":"movesMade","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"getGame","outputs":[{"internalType":"enum TicTacToe.Player[3][3]","name":"","type":"uint8[3][3]"},{"internalType":"enum TicTacToe.GameState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint8","name":"x","type":"uint8"},{"internalType":"uint8","name":"y","type":"uint8"}],"name":"makeMove","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}
+    {
+        "anonymous": false,
+        "inputs": [
+            { "indexed": false, "internalType": "uint8", "name": "state", "type": "uint8" }
+        ],
+        "name": "GameEnded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            { "indexed": true, "internalType": "address", "name": "playerX", "type": "address" },
+            { "indexed": true, "internalType": "address", "name": "playerO", "type": "address" }
+        ],
+        "name": "GameStarted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            { "indexed": true, "internalType": "address", "name": "player", "type": "address" },
+            { "indexed": false, "internalType": "uint8", "name": "x", "type": "uint8" },
+            { "indexed": false, "internalType": "uint8", "name": "y", "type": "uint8" }
+        ],
+        "name": "MoveMade",
+        "type": "event"
+    },
+    {
+        "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+        "name": "games",
+        "outputs": [
+            { "internalType": "uint8", "name": "state", "type": "uint8" },
+            { "internalType": "address", "name": "playerX", "type": "address" },
+            { "internalType": "address", "name": "playerO", "type": "address" },
+            { "internalType": "uint8", "name": "movesMade", "type": "uint8" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getGame",
+        "outputs": [
+            { "internalType": "uint8[3][3]", "name": "", "type": "uint8[3][3]" },
+            { "internalType": "uint8", "name": "", "type": "uint8" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "uint8", "name": "x", "type": "uint8" }, { "internalType": "uint8", "name": "y", "type": "uint8" }],
+        "name": "makeMove",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [{ "internalType": "address", "name": "playerO", "type": "address" }],
+        "name": "startGame",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
 ];
 
 // Initialize the game
@@ -154,3 +209,4 @@ async function checkGameOver() {
 
 // Start the game
 init();
+
