@@ -48,10 +48,18 @@ async function loadGameState() {
     }
 }
 
+// Event listener for the start game button
 document.getElementById('startGame').addEventListener('click', async () => {
-    const playerO = await signer.getAddress(); // Get address of playerO
-    await contract.startGame(playerO); // Start the game
-    await loadGameState(); // Load game state
+    console.log('Start Game button clicked'); // Debugging log
+    try {
+        const playerO = await signer.getAddress(); // Get address of playerO
+        console.log('Player O Address:', playerO); // Debugging log
+        await contract.startGame(playerO); // Start the game
+        await loadGameState(); // Load game state
+        console.log('Game started'); // Debugging log
+    } catch (error) {
+        console.error('Error starting the game:', error); // Log any errors
+    }
 });
 
 async function makeMove(x, y) {
@@ -143,6 +151,3 @@ function resetGame() {
 
 // Call this function when your page loads
 window.addEventListener('load', init);
-
-
-
