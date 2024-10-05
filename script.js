@@ -91,12 +91,28 @@ document.getElementById('startGame').addEventListener('click', async () => {
 // Function to make a move
 async function makeMove(x, y) {
     try {
+        // Disable further moves until the transaction is confirmed
+        disableBoard(true);
+
         const tx = await contract.makeMove(x, y); // Call the smart contract to make a move
         await tx.wait(); // Wait for transaction to be confirmed
         console.log('Move made:', { x, y }); // Log the move
         await loadGameState(); // Refresh the game state after the move
+
+        // Re-enable board interaction after the move is confirmed
+        disableBoard(false);
     } catch (error) {
         console.error('Error making move:', error); // Log any errors
+        // Re-enable board interaction if there was an error
+        disableBoard(false);
+    }
+}
+
+// Function to disable or enable board interaction
+function disableBoard(disable) {
+    const cells = board.children;
+    for (let i = 0; i < cells.length; i++) {
+        cells[i].style.pointerEvents = disable ? 'none' : 'auto'; // Disable pointer events
     }
 }
 
@@ -166,18 +182,17 @@ function checkWinner() {
         resetGame(); // Restart the game after a tie
     }
 
-    return winner; // Return whether a winner was found
+    return winner; // Return if there was a winner
 }
 
+// Reset the game state
 function resetGame() {
-    setTimeout(() => {
-        cells.fill(null);
-        currentPlayer = 'X';
-        gameOver = false;
-        gameStarted = false; // Reset gameStarted to false
-        createBoard(); // Recreate the board
-    }, 2000); // Reset the game after 2 seconds
+    currentPlayer = 'X'; // Reset to Player X
+    cells.fill(null); // Reset cells
+    gameOver = false; // Reset game over flag
+    createBoard(); // Recreate board
+    loadGameState(); // Load initial game state
 }
 
-// Initialize the game when the page loads
-window.addEventListener('load', init);
+// Start the game
+init();
