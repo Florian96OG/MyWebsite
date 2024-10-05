@@ -40,7 +40,10 @@ function checkWinner() {
             board.children[a].classList.add('winner');
             board.children[b].classList.add('winner');
             board.children[c].classList.add('winner');
-            setTimeout(() => alert(currentPlayer + ' wins!'), 10);
+            setTimeout(() => {
+                alert(currentPlayer + ' wins!');
+                resetGame(); // Restart the game after a win
+            }, 10);
             return true;
         }
         return false;
@@ -48,10 +51,26 @@ function checkWinner() {
 
     // Check for a draw (no empty cells)
     if (cells.every(cell => cell)) {
-        setTimeout(() => alert("It's a draw!"), 10);
+        setTimeout(() => {
+            alert("It's a draw!");
+            resetGame(); // Restart the game after a draw
+        }, 10);
     }
 
     return winner;
+}
+
+// Function to reset the game
+function resetGame() {
+    setTimeout(() => {
+        // Clear the cells and reset the board
+        for (let i = 0; i < cells.length; i++) {
+            cells[i] = null;
+            board.children[i].innerText = '';
+            board.children[i].classList.remove('winner'); // Remove winner highlights
+        }
+        currentPlayer = 'X'; // Reset to player X
+    }, 2000); // Wait 2 seconds before resetting
 }
 
 createBoard();
