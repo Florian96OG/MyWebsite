@@ -1,6 +1,7 @@
 const board = document.getElementById('board');
 let currentPlayer = 'X';
 const cells = Array(9).fill(null);
+let gameOver = false; // Flag to indicate if the game has ended
 
 function createBoard() {
     for (let i = 0; i < 9; i++) {
@@ -12,7 +13,7 @@ function createBoard() {
 }
 
 function handleClick(index) {
-    if (!cells[index]) {
+    if (!cells[index] && !gameOver) { // Check if the cell is empty and game is not over
         cells[index] = currentPlayer;
         board.children[index].innerText = currentPlayer;
         if (checkWinner()) {
@@ -33,6 +34,7 @@ function checkWinner() {
         [0, 4, 8],
         [2, 4, 6]
     ];
+    
     const winner = winningCombinations.some(combination => {
         const [a, b, c] = combination;
         if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
@@ -42,6 +44,7 @@ function checkWinner() {
             board.children[c].classList.add('winner');
             setTimeout(() => {
                 alert(currentPlayer + ' wins!');
+                gameOver = true; // Set game over to true
                 resetGame(); // Restart the game after a win
             }, 10);
             return true;
@@ -53,6 +56,7 @@ function checkWinner() {
     if (cells.every(cell => cell)) {
         setTimeout(() => {
             alert("It's a draw!");
+            gameOver = true; // Set game over to true
             resetGame(); // Restart the game after a draw
         }, 10);
     }
@@ -70,7 +74,9 @@ function resetGame() {
             board.children[i].classList.remove('winner'); // Remove winner highlights
         }
         currentPlayer = 'X'; // Reset to player X
+        gameOver = false; // Reset game over flag
     }, 2000); // Wait 2 seconds before resetting
 }
 
 createBoard();
+
