@@ -18,33 +18,43 @@ const contractABI = [
 ];
 
 async function init() {
-    await provider.send("eth_requestAccounts", []); // Request wallet connection
+    // Request wallet connection
+    await provider.send("eth_requestAccounts", []);
     signer = provider.getSigner();
+
+    console.log("Signer Address:", await signer.getAddress()); // Log the user's address
+
     contract = new ethers.Contract(contractAddress, contractABI, signer);
     createBoard(); // Create board on initialization
 }
 
 async function loadGameState() {
     // Load the game state from the smart contract
-    const gameState = await contract.getGame();
-    const boardState = gameState[0]; // The board state
-    const state = gameState[1]; // The game state
+    try {
+        const gameState = await contract.getGame();
+        const boardState = gameState[0]; // The board state
+        const state = gameState[1]; // The game state
 
-    // Update the cells based on the game state
-    for (let i = 0; i < 9; i++) {
-        if (boardState[Math.floor(i / 3)][i % 3] === 1) { // Assuming 1 is for Player X
-            cells[i] = 'X';
-            board.children[i].innerText = 'X';
-        } else if (boardState[Math.floor(i / 3)][i % 3] === 2) { // Assuming 2 is for Player O
-            cells[i] = 'O';
-            board.children[i].innerText = 'O';
+        console.log("Game State:", gameState); // Log the entire game state
+
+        // Update the cells based on the game state
+        for (let i = 0; i < 9; i++) {
+            if (boardState[Math.floor(i / 3)][i % 3] === 1) { // Assuming 1 is for Player X
+                cells[i] = 'X';
+                board.children[i].innerText = 'X';
+            } else if (boardState[Math.floor(i / 3)][i % 3] === 2) { // Assuming 2 is for Player O
+                cells[i] = 'O';
+                board.children[i].innerText = 'O';
+            }
         }
-    }
 
-    // Update current player and game status
-    if (state !== 0) { // If state is not in progress
-        gameOver = true;
-        alert('Game Over');
+        // Update current player and game status
+        if (state !== 0) { // If state is not in progress
+            gameOver = true;
+            alert('Game Over');
+        }
+    } catch (error) {
+        console.error("Error loading game state:", error); // Log any errors
     }
 }
 
@@ -54,7 +64,10 @@ document.getElementById('startGame').addEventListener('click', async () => {
     try {
         const playerO = await signer.getAddress(); // Get address of playerO
         console.log('Player O Address:', playerO); // Debugging log
-        await contract.startGame(playerO); // Start the game
+        const tx = await contract.startGame(playerO); // Start the game
+        await tx.wait(); // Wait for transaction to be confirmed
+        console.log('Transaction confirmed:', tx); // Log the transaction
+
         await loadGameState(); // Load game state
         console.log('Game started'); // Debugging log
     } catch (error) {
@@ -63,7 +76,14 @@ document.getElementById('startGame').addEventListener('click', async () => {
 });
 
 async function makeMove(x, y) {
-    await contract.makeMove(x, y); // Call the smart contract to make a move
+    try {
+        const tx = await contract.makeMove(x, y); // Call the smart contract to make a move
+        await tx.wait(); // Wait for transaction to be confirmed
+        console.log('Move made:', { x, y }); // Log the move
+        await loadGameState(); // Refresh the game state after the move
+    } catch (error) {
+        console.error('Error making move:', error); // Log any errors
+    }
 }
 
 function createBoard() {
@@ -125,29 +145,22 @@ function checkWinner() {
 
     // Check for a draw (no empty cells)
     if (cells.every(cell => cell)) {
-        setTimeout(() => {
-            alert("It's a draw!");
-            gameOver = true; // Set game over to true
-            resetGame(); // Restart the game after a draw
-        }, 10);
+        alert('It\'s a tie!');
+        gameOver = true; // Set game over to true
+        resetGame(); // Restart the game after a tie
     }
 
     return winner;
 }
 
-// Function to reset the game
 function resetGame() {
     setTimeout(() => {
-        // Clear the cells and reset the board
-        for (let i = 0; i < cells.length; i++) {
-            cells[i] = null;
-            board.children[i].innerText = '';
-            board.children[i].classList.remove('winner'); // Remove winner highlights
-        }
-        currentPlayer = 'X'; // Reset to player X
-        gameOver = false; // Reset game over flag
-    }, 2000); // Wait 2 seconds before resetting
+        cells.fill(null);
+        currentPlayer = 'X';
+        gameOver = false;
+        createBoard();
+    }, 2000); // Reset the game after 2 seconds
 }
 
-// Call this function when your page loads
+// Initialize the game when the page loads
 window.addEventListener('load', init);
