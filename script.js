@@ -17,6 +17,7 @@ const contractABI = [
     {"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}
 ];
 
+// Initialize the game
 async function init() {
     // Request wallet connection
     await provider.send("eth_requestAccounts", []);
@@ -28,8 +29,8 @@ async function init() {
     createBoard(); // Create board on initialization
 }
 
+// Load game state from the smart contract
 async function loadGameState() {
-    // Load the game state from the smart contract
     try {
         const gameState = await contract.getGame();
         const boardState = gameState[0]; // The board state
@@ -48,7 +49,7 @@ async function loadGameState() {
             }
         }
 
-        // Update current player and game status
+        // Check if the game is over
         if (state !== 0) { // If state is not in progress
             gameOver = true;
             alert('Game Over');
@@ -137,20 +138,20 @@ function checkWinner() {
                 alert(currentPlayer + ' wins!');
                 gameOver = true; // Set game over to true
                 resetGame(); // Restart the game after a win
-            }, 10);
-            return true;
+            }, 2000); // Alert and reset after 2 seconds
+            return true; // A winner has been found
         }
-        return false;
+        return false; // No winner found in this combination
     });
 
-    // Check for a draw (no empty cells)
-    if (cells.every(cell => cell)) {
+    if (!winner && !cells.includes(null)) {
+        // If there's no winner and no empty cells, it's a tie
         alert('It\'s a tie!');
         gameOver = true; // Set game over to true
         resetGame(); // Restart the game after a tie
     }
 
-    return winner;
+    return winner; // Return whether a winner was found
 }
 
 function resetGame() {
@@ -158,7 +159,7 @@ function resetGame() {
         cells.fill(null);
         currentPlayer = 'X';
         gameOver = false;
-        createBoard();
+        createBoard(); // Recreate the board
     }, 2000); // Reset the game after 2 seconds
 }
 
