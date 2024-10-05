@@ -65,6 +65,12 @@ async function loadGameState() {
             gameOver = true;
             alert('It\'s a tie!');
         }
+
+        // If game is not over, enable the board
+        if (!gameOver) {
+            disableBoard(false);
+        }
+
     } catch (error) {
         console.error("Error loading game state:", error); // Log any errors
     }
@@ -98,12 +104,10 @@ async function makeMove(x, y) {
         await tx.wait(); // Wait for transaction to be confirmed
         console.log('Move made:', { x, y }); // Log the move
         await loadGameState(); // Refresh the game state after the move
-
-        // Re-enable board interaction after the move is confirmed
-        disableBoard(false);
     } catch (error) {
         console.error('Error making move:', error); // Log any errors
-        // Re-enable board interaction if there was an error
+    } finally {
+        // Re-enable board interaction after the move is confirmed or error
         disableBoard(false);
     }
 }
