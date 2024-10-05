@@ -10,15 +10,8 @@ let signer;
 let contract;
 
 // Your new contract address and ABI
-const contractAddress = "0x33d9dEA2Fe94be83cAbb053fDC847A4fA22b3b12";
-const contractABI = [
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"}],"name":"GameEnded","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"playerX","type":"address"},{"indexed":true,"internalType":"address","name":"playerO","type":"address"}],"name":"GameStarted","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":false,"internalType":"uint8","name":"x","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"y","type":"uint8"}],"name":"MoveMade","type":"event"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"},{"internalType":"uint8","name":"movesMade","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"getGame","outputs":[{"internalType":"enum TicTacToe.Player[3][3]","name":"","type":"uint8[3][3]"},{"internalType":"enum TicTacToe.GameState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint8","name":"x","type":"uint8"},{"internalType":"uint8","name":"y","type":"uint8"}],"name":"makeMove","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}
+const contractAddress = "0xc09c6Bf98C8A6F90B2a8303A59198Cd737ADE098";
+const contractABI = [[{"anonymous":false,"inputs":[{"indexed":false,"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"}],"name":"GameEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"playerX","type":"address"},{"indexed":true,"internalType":"address","name":"playerO","type":"address"}],"name":"GameStarted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":false,"internalType":"uint8","name":"x","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"y","type":"uint8"}],"name":"MoveMade","type":"event"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"games","outputs":[{"internalType":"enum TicTacToe.GameState","name":"state","type":"uint8"},{"internalType":"address","name":"playerX","type":"address"},{"internalType":"address","name":"playerO","type":"address"},{"internalType":"uint8","name":"movesMade","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getGame","outputs":[{"internalType":"enum TicTacToe.Player[3][3]","name":"","type":"uint8[3][3]"},{"internalType":"enum TicTacToe.GameState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint8","name":"x","type":"uint8"},{"internalType":"uint8","name":"y","type":"uint8"}],"name":"makeMove","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"playerO","type":"address"}],"name":"startGame","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 ];
 
 // Initialize the game
@@ -66,11 +59,6 @@ async function loadGameState() {
             alert('It\'s a tie!');
         }
 
-        // If game is not over, enable the board
-        if (!gameOver) {
-            disableBoard(false);
-        }
-
     } catch (error) {
         console.error("Error loading game state:", error); // Log any errors
     }
@@ -100,102 +88,60 @@ async function makeMove(x, y) {
         // Disable further moves until the transaction is confirmed
         disableBoard(true);
 
-        const tx = await contract.makeMove(x, y); // Call the smart contract to make a move
-        await tx.wait(); // Wait for transaction to be confirmed
-        console.log('Move made:', { x, y }); // Log the move
-        await loadGameState(); // Refresh the game state after the move
+        const tx = await contract.makeMove(x, y); // Make the move
+        await tx.wait(); // Wait for transaction confirmation
+
+        // Update the game state after move
+        cells[x * 3 + y] = currentPlayer;
+        board.children[x * 3 + y].innerText = currentPlayer;
+
+        // Check if the game is over
+        await checkGameOver();
+
+        // Switch player
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+        // Re-enable the board after the move
+        disableBoard(false);
     } catch (error) {
-        console.error('Error making move:', error); // Log any errors
-    } finally {
-        // Re-enable board interaction after the move is confirmed or error
+        console.error('Error making the move:', error);
+        // Re-enable the board in case of error
         disableBoard(false);
     }
 }
 
-// Function to disable or enable board interaction
+// Function to disable/enable board cells
 function disableBoard(disable) {
-    const cells = board.children;
-    for (let i = 0; i < cells.length; i++) {
-        cells[i].style.pointerEvents = disable ? 'none' : 'auto'; // Disable pointer events
+    const cells = board.getElementsByClassName('cell');
+    for (let cell of cells) {
+        cell.style.pointerEvents = disable ? 'none' : 'auto'; // Disable pointer events
     }
 }
 
+// Create the game board
 function createBoard() {
     board.innerHTML = ''; // Clear previous board
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.addEventListener('click', () => handleClick(i));
-        cell.style.pointerEvents = gameStarted ? 'auto' : 'none'; // Disable pointer events before game starts
-        board.appendChild(cell);
+        cell.className = 'cell';
+        cell.addEventListener('click', () => {
+            if (gameStarted && !gameOver && cells[i] === null) {
+                const x = Math.floor(i / 3);
+                const y = i % 3;
+                makeMove(x, y); // Make a move when a cell is clicked
+            }
+        });
+        board.appendChild(cell); // Append cell to the board
     }
 }
 
-function handleClick(index) {
-    if (!gameStarted || gameOver) return; // Prevent clicks if game hasn't started or is over
-    const x = Math.floor(index / 3);
-    const y = index % 3;
-
-    if (!cells[index]) {
-        cells[index] = currentPlayer;
-        board.children[index].innerText = currentPlayer;
-
-        // Call the smart contract to make a move
-        makeMove(x, y).catch(console.error); // Handle any errors
-
-        if (checkWinner()) {
-            return; // Stop the game if there's a winner
-        }
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+// Function to check if the game is over
+async function checkGameOver() {
+    const gameState = await contract.getGame();
+    if (gameState[1] !== 1) { // 1 represents InProgress
+        gameOver = true; // Mark the game as over
+        alert('Game Over!'); // Notify players
     }
-}
-
-function checkWinner() {
-    const winningCombinations = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
-    
-    const winner = winningCombinations.some(combination => {
-        const [a, b, c] = combination;
-        if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
-            // Highlight winning cells
-            board.children[a].classList.add('winner');
-            board.children[b].classList.add('winner');
-            board.children[c].classList.add('winner');
-            setTimeout(() => {
-                alert(currentPlayer + ' wins!');
-                gameOver = true; // Set game over to true
-                resetGame(); // Restart the game after a win
-            }, 2000); // Alert and reset after 2 seconds
-            return true; // A winner has been found
-        }
-        return false; // No winner found in this combination
-    });
-
-    if (!winner && !cells.includes(null)) {
-        // If there's no winner and no empty cells, it's a tie
-        alert('It\'s a tie!');
-        gameOver = true; // Set game over to true
-        resetGame(); // Restart the game after a tie
-    }
-
-    return winner; // Return if there was a winner
-}
-
-// Reset the game state
-function resetGame() {
-    currentPlayer = 'X'; // Reset to Player X
-    cells.fill(null); // Reset cells
-    gameOver = false; // Reset game over flag
-    createBoard(); // Recreate board
-    loadGameState(); // Load initial game state
 }
 
 // Start the game
